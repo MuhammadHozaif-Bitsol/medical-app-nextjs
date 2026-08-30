@@ -6,6 +6,11 @@
       "email": "staff@clinic.com",
       "password": "password123",
       "role": "staff"
+    },
+    {
+      "id": "p1788091280893",
+      "name": "hozaif",
+      "role": "patient"
     }
   ],
   "doctors": [
@@ -40,6 +45,39 @@
       "avatarUrl": "https://randomuser.me/api/portraits/women/90.jpg"
     }
   ],
-  "appointments": [],
+  "appointments": [
+    {
+      "doctorId": "d2",
+      "patientId": "p1788091280893",
+      "patientName": "hozaif",
+      "dateTimeUtc": "2026-08-31T10:00:00+05:00",
+      "id": "apt1788091319391",
+      "status": "confirmed"
+    },
+    {
+      "doctorId": "d2",
+      "patientId": "p1788091280893",
+      "patientName": "hozaif",
+      "dateTimeUtc": "2026-08-30T09:00:00+05:00",
+      "id": "apt1788091505842",
+      "status": "cancelled"
+    },
+    {
+      "doctorId": "d2",
+      "patientId": "p1788091280893",
+      "patientName": "hozaif",
+      "dateTimeUtc": "2026-08-30T14:00:00+05:00",
+      "id": "apt1788091529576",
+      "status": "confirmed"
+    },
+    {
+      "doctorId": "d1",
+      "patientId": "p1788091280893",
+      "patientName": "hozaif",
+      "dateTimeUtc": "2026-09-01T09:00:00+05:00",
+      "id": "apt1788100224631",
+      "status": "confirmed"
+    }
+  ],
   "schedules": {}
 }
