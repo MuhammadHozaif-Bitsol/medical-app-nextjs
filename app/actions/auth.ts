@@ -7,7 +7,7 @@ import crypto from "crypto";
 
 export async function loginAction(email: string, password?: string) {
   const db = await readDb();
-  
+
   // Minimal auth logic for prototype
   const user = db.users.find((u: any) => u.email === email);
   if (!user || user.password !== password) {
@@ -16,11 +16,15 @@ export async function loginAction(email: string, password?: string) {
 
   // Set auth cookie
   const cookieStore = await cookies();
-  cookieStore.set("auth_session", JSON.stringify({ id: user.id, role: user.role }), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  cookieStore.set(
+    "auth_session",
+    JSON.stringify({ id: user.id, role: user.role }),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    },
+  );
 
   if (user.role === "staff") {
     redirect("/staff/dashboard");
@@ -29,9 +33,13 @@ export async function loginAction(email: string, password?: string) {
   }
 }
 
-export async function registerAction(name: string, email: string, password?: string) {
+export async function registerAction(
+  name: string,
+  email: string,
+  password?: string,
+) {
   const db = await readDb();
-  
+
   if (db.users.find((u: any) => u.email === email)) {
     throw new Error("Email already registered");
   }
@@ -49,11 +57,15 @@ export async function registerAction(name: string, email: string, password?: str
 
   // Set auth cookie
   const cookieStore = await cookies();
-  cookieStore.set("auth_session", JSON.stringify({ id: newUser.id, role: newUser.role }), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  cookieStore.set(
+    "auth_session",
+    JSON.stringify({ id: newUser.id, role: newUser.role }),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    },
+  );
 
   redirect("/patient/doctors");
 }

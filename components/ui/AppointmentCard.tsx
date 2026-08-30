@@ -1,11 +1,11 @@
 import React from "react";
-import type { Appointment } from "../../types";
+import type { Appointment } from "@/types";
 import { Button } from "./Button";
 import { format, parseISO } from "date-fns";
 
 export interface AppointmentCardProps {
   appointment: Appointment;
-  doctorName?: string; // Sometimes we pass this if we joined the data
+  doctorName?: string;
   onCancelClick?: (appointmentId: string) => void;
   isStaffView?: boolean;
 }
@@ -22,10 +22,10 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   const timeStr = format(localDate, "h:mm a");
 
   return (
-    <div className="p-4 rounded-lg border border-slate-200 bg-white shadow-sm flex flex-col sm:flex-row justify-between gap-4">
+    <div className="p-4 border border-slate-200 rounded-lg bg-white shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="font-bold text-slate-800">
+        <div className="flex items-center gap-3 mb-2">
+          <h4 className="font-semibold text-slate-800 text-lg">
             {dateStr} at {timeStr}
           </h4>
           <span
@@ -38,7 +38,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             {appointment.status}
           </span>
         </div>
-
         <div className="text-sm text-slate-600 space-y-1">
           {isStaffView && (
             <p>
@@ -48,7 +47,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
               </span>
             </p>
           )}
-
           {doctorName ? (
             <p>
               Doctor:{" "}
@@ -59,7 +57,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
           )}
         </div>
       </div>
-
       {appointment.status === "confirmed" && onCancelClick && (
         <div className="flex items-center">
           <Button
