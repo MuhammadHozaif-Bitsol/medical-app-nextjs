@@ -1,7 +1,7 @@
 import React from "react";
 import type { Doctor } from "@/types";
 import { Button } from "./Button";
-import { LazyImage } from "./LazyImage";
+import Image from "next/image";
 
 export interface DoctorCardProps {
   doctor: Doctor;
@@ -22,11 +22,15 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({
           : "border-slate-200 shadow-sm"
       }`}
     >
-      <LazyImage
-        src={doctor.avatarUrl || ""}
-        alt={doctor.name}
-        className="w-24 h-24 rounded-full shrink-0 bg-slate-100"
-      />
+      <div className="w-24 h-24 rounded-full shrink-0 bg-slate-100 relative overflow-hidden">
+        <Image
+          src={doctor.avatarUrl || ""}
+          alt={doctor.name}
+          fill
+          className="object-cover"
+          sizes="96px"
+        />
+      </div>
       <div className="flex-1 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
           <h3 className="font-bold text-lg text-slate-800">{doctor.name}</h3>

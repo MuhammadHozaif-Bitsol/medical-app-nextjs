@@ -7,21 +7,18 @@ import { DoctorCard } from "@/components/ui/DoctorCard";
 import { Bot, AlertCircle } from "lucide-react";
 import { askAIAssistant, getDoctors } from "@/app/actions/patient";
 
-export const AIAssistant: React.FC = () => {
+export interface AIAssistantProps {
+  doctors: Doctor[];
+}
+
+export const AIAssistant: React.FC<AIAssistantProps> = ({ doctors }) => {
   const [symptoms, setSymptoms] = useState("");
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [result, setResult] = useState<{
     doctor: Doctor;
     reason: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getDoctors().then((res) => {
-      if (res) setDoctors(res);
-    });
-  }, []);
 
   const submitAction = async (e: React.FormEvent) => {
     e.preventDefault();
