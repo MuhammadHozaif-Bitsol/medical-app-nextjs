@@ -11,6 +11,13 @@
       "id": "p1788091280893",
       "name": "hozaif",
       "role": "patient"
+    },
+    {
+      "id": "p1788105146909",
+      "name": "admin",
+      "email": "admin@gmail.com",
+      "password": "BaLFqR2tolC3vrEo10Uq4PnLdA6K92frCUpGPfYw",
+      "role": "patient"
     }
   ],
   "doctors": [
@@ -68,7 +75,7 @@
       "patientName": "hozaif",
       "dateTimeUtc": "2026-08-30T14:00:00+05:00",
       "id": "apt1788091529576",
-      "status": "confirmed"
+      "status": "cancelled"
     },
     {
       "doctorId": "d1",
@@ -77,7 +84,34 @@
       "dateTimeUtc": "2026-09-01T09:00:00+05:00",
       "id": "apt1788100224631",
       "status": "confirmed"
+    },
+    {
+      "doctorId": "d1",
+      "patientId": "p1788105146909",
+      "patientName": "admin",
+      "dateTimeUtc": "2026-08-30T09:00:00+05:00",
+      "id": "apt1788105197563",
+      "status": "confirmed"
+    },
+    {
+      "doctorId": "d3",
+      "patientId": "p1788105146909",
+      "patientName": "admin",
+      "dateTimeUtc": "2026-08-31T14:30:00+05:00",
+      "id": "apt1788105762378",
+      "status": "confirmed"
     }
   ],
-  "schedules": {}
+  "schedules": {
+    "d5": [
+      "13:30",
+      "16:00",
+      "16:30"
+    ],
+    "d3": [
+      "11:30",
+      "12:00",
+      "14:30"
+    ]
+  }
 }
