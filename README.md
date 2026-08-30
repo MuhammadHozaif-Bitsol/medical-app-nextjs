@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MedBook - Next.js Clinic Management System
 
-## Getting Started
+MedBook is a lightweight, modern medical clinic booking and management system built with Next.js 16 (App Router) and React Server Components.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Role-Based Authentication**: Secure edge-level routing separating `patient` and `staff` access.
+- **Patient Portal**: Allows patients to view available doctors, chat with an AI assistant, and book appointments.
+- **Staff Dashboard**: Allows clinic administrators to view all global appointments, manage doctor directories, and dynamically edit available time slots.
+- **Server Actions**: 100% server-side data mutations ensuring secure operations and preventing double-booking race conditions.
+- **Local JSON Database**: Uses a lightweight local file system database (`data/db.json`) for rapid prototyping without needing external database setup.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router & Server Actions)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Forms**: [React Hook Form](https://react-hook-form.com/)
+- **Date Management**: [date-fns](https://date-fns.org/)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💻 Getting Started
 
-## Learn More
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Open the App**
+   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔐 Test Accounts
 
-## Deploy on Vercel
+To test the role-based system, you can use the following pre-configured account:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Staff Admin Account**
+- **Email**: `staff@clinic.com`
+- **Password**: `password123`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*(Patients can be created on-the-fly using the "Register" tab on the login page).*

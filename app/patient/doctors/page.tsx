@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { readDb } from "@/lib/db";
+import { verifyToken } from "@/lib/session";
 import { PatientPortal } from "@/components/portal/PatientPortal";
 
 export default async function PatientPortalPage() {
@@ -11,7 +12,10 @@ export default async function PatientPortalPage() {
     redirect("/login");
   }
 
-  const session = JSON.parse(authCookie.value);
+  const session = await verifyToken(authCookie.value);
+  if (!session) {
+    redirect("/login");
+  }
   const db = await readDb();
 
   const user = db.users.find((u: any) => u.id === session.id);
@@ -25,7 +29,7 @@ export default async function PatientPortalPage() {
     .filter((apt: any) => apt.patientId === user.id)
     .sort(
       (a: any, b: any) =>
-        new Date(a.dateTimeUtc).getTime() - new Date(b.dateTimeUtc).getTime()
+        new Date(a.dateTimeUtc).getTime() - new Date(b.dateTimeUtc).getTime(),
     );
 
   const doctorsMap: Record<string, string> = {};
@@ -35,10 +39,10 @@ export default async function PatientPortalPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <PatientPortal 
-        user={user} 
-        appointments={appointments} 
-        doctorsMap={doctorsMap} 
+      <PatientPortal
+        user={user}
+        appointments={appointments}
+        doctorsMap={doctorsMap}
         doctors={db.doctors}
       />
     </main>

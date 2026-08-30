@@ -3,7 +3,7 @@
 import { readDb, writeDb } from "@/lib/db";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import crypto from "crypto";
+import { signToken } from "@/lib/session";
 
 export async function loginAction(email: string, password?: string) {
   const db = await readDb();
@@ -16,15 +16,13 @@ export async function loginAction(email: string, password?: string) {
 
   // Set auth cookie
   const cookieStore = await cookies();
-  cookieStore.set(
-    "auth_session",
-    JSON.stringify({ id: user.id, role: user.role }),
-    {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    },
-  );
+  const token = await signToken({ id: user.id, role: user.role });
+  
+  cookieStore.set("auth_session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 
   if (user.role === "staff") {
     redirect("/staff/dashboard");
@@ -40,7 +38,15 @@ export async function registerAction(
 ) {
   const db = await readDb();
 
-  if (db.users.find((u: any) => u.email === email)) {
+  const normalizedInputEmail = typeof email === "string" ? email.toLowerCase() : "";
+  const existingUser = db.users.find((u: any) => {
+    if (typeof u.email === "string") {
+      return u.email.toLowerCase() === normalizedInputEmail;
+    }
+    return false;
+  });
+
+  if (existingUser) {
     throw new Error("Email already registered");
   }
 
@@ -57,15 +63,13 @@ export async function registerAction(
 
   // Set auth cookie
   const cookieStore = await cookies();
-  cookieStore.set(
-    "auth_session",
-    JSON.stringify({ id: newUser.id, role: newUser.role }),
-    {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    },
-  );
+  const token = await signToken({ id: newUser.id, role: newUser.role });
+
+  cookieStore.set("auth_session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 
   redirect("/patient/doctors");
 }

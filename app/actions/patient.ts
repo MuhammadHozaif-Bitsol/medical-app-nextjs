@@ -4,14 +4,19 @@ import { readDb, writeDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-// Next.js Best Practice: Always verify auth *inside* the Server Action.
+import { verifyToken } from "@/lib/session";
+
 async function requireAuth() {
   const cookieStore = await cookies();
   const authSession = cookieStore.get("auth_session");
   if (!authSession) {
     throw new Error("Unauthorized");
   }
-  return JSON.parse(authSession.value);
+  const session = await verifyToken(authSession.value);
+  if (!session) {
+    throw new Error("Invalid Session");
+  }
+  return session;
 }
 
 export async function getDoctors() {
@@ -33,15 +38,18 @@ export async function getAppointments() {
 export async function getAvailableSlots(doctorId: string, date: string) {
   await requireAuth();
   const db = await readDb();
-  
-  const allSlots = ["09:00", "10:00", "11:00", "14:00", "15:00"];
-  
+
+  // Get the dynamic schedule assigned by the Staff Dashboard, 
+  // or fallback to a default schedule if none exists yet.
+  const allSlots = db.schedules?.[doctorId] || ["09:00", "10:00", "11:00", "14:00", "15:00"];
+
   // Find booked slots for this doctor on the selected date
-  const bookedSlots = db.appointments
-    .filter((apt: any) => 
-      apt.doctorId === doctorId && 
-      apt.status === "confirmed" &&
-      apt.dateTimeUtc.includes(date)
+  const bookedSlotsList = db.appointments
+    .filter(
+      (apt: any) =>
+        apt.doctorId === doctorId &&
+        apt.status === "confirmed" &&
+        apt.dateTimeUtc.includes(date),
     )
     .map((apt: any) => {
       // dateTimeUtc looks like "2026-08-31T10:00:00-04:00"
@@ -51,7 +59,8 @@ export async function getAvailableSlots(doctorId: string, date: string) {
     })
     .filter(Boolean);
 
-  return allSlots.filter((slot) => !bookedSlots.includes(slot));
+  const bookedSlots = new Set(bookedSlotsList);
+  return allSlots.filter((slot: string) => !bookedSlots.has(slot));
 }
 
 export async function bookAppointment(payload: any) {
@@ -64,10 +73,11 @@ export async function bookAppointment(payload: any) {
 
   // Validate that the slot is not already taken
   // The payload.dateTimeUtc looks like "2026-08-31T10:00:00+05:00"
-  const isTaken = db.appointments.some((apt: any) => 
-    apt.doctorId === payload.doctorId && 
-    apt.status === "confirmed" && 
-    apt.dateTimeUtc === payload.dateTimeUtc
+  const isTaken = db.appointments.some(
+    (apt: any) =>
+      apt.doctorId === payload.doctorId &&
+      apt.status === "confirmed" &&
+      apt.dateTimeUtc === payload.dateTimeUtc,
   );
 
   if (isTaken) {
@@ -89,10 +99,10 @@ export async function cancelAppointment(appointmentId: string) {
   const session = await requireAuth();
   const db = await readDb();
   const index = db.appointments.findIndex((a: any) => a.id === appointmentId);
-  
+
   if (index !== -1) {
     const apt = db.appointments[index];
-    
+
     // Auth Check: Ensure only the patient or a staff member can cancel this
     if (session.role === "patient" && apt.patientId !== session.id) {
       throw new Error("Forbidden: You do not own this appointment");
@@ -109,7 +119,7 @@ export async function cancelAppointment(appointmentId: string) {
 export async function askAIAssistant(symptoms: string) {
   await requireAuth();
   const db = await readDb();
-  
+
   const specialty =
     symptoms.toLowerCase().includes("heart") ||
     symptoms.toLowerCase().includes("chest")

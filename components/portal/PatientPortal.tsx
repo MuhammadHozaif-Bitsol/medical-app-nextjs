@@ -15,11 +15,11 @@ export interface PatientPortalProps {
   doctors: Doctor[];
 }
 
-export const PatientPortal: React.FC<PatientPortalProps> = ({ 
-  user, 
-  appointments, 
+export const PatientPortal: React.FC<PatientPortalProps> = ({
+  user,
+  appointments,
   doctorsMap,
-  doctors
+  doctors,
 }) => {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
