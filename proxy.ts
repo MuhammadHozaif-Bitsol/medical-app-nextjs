@@ -19,22 +19,27 @@ export function proxy(request: NextRequest) {
     // If authenticated, perform role checks
     try {
       const session = JSON.parse(authSession.value);
-      
+
       // Prevent patients from accessing staff routes
       if (session.role === "patient" && url.pathname.startsWith("/staff")) {
         url.pathname = "/patient/doctors";
         return NextResponse.redirect(url);
       }
-      
+
       // Prevent staff from accessing patient routes
       if (session.role === "staff" && url.pathname.startsWith("/patient")) {
         url.pathname = "/staff/dashboard";
         return NextResponse.redirect(url);
       }
-      
+
       // Redirect from root or login to appropriate dashboard
-      if (url.pathname === "/" || url.pathname === "/login" || url.pathname === "/register") {
-        url.pathname = session.role === "staff" ? "/staff/dashboard" : "/patient/doctors";
+      if (
+        url.pathname === "/" ||
+        url.pathname === "/login" ||
+        url.pathname === "/register"
+      ) {
+        url.pathname =
+          session.role === "staff" ? "/staff/dashboard" : "/patient/doctors";
         return NextResponse.redirect(url);
       }
     } catch (e) {
