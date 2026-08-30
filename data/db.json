@@ -1,0 +1,45 @@
+{
+  "users": [
+    {
+      "id": "s1",
+      "name": "Admin Staff",
+      "email": "staff@clinic.com",
+      "password": "password123",
+      "role": "staff"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "d1",
+      "name": "Dr. Ayesha",
+      "specialty": "General Practice",
+      "avatarUrl": "https://randomuser.me/api/portraits/women/44.jpg"
+    },
+    {
+      "id": "d2",
+      "name": "Dr. Bilal",
+      "specialty": "Cardiology",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/32.jpg"
+    },
+    {
+      "id": "d3",
+      "name": "Dr. Sana",
+      "specialty": "Neurology",
+      "avatarUrl": "https://randomuser.me/api/portraits/women/68.jpg"
+    },
+    {
+      "id": "d4",
+      "name": "Dr. Usman",
+      "specialty": "Orthopedics",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/75.jpg"
+    },
+    {
+      "id": "d5",
+      "name": "Dr. Fatima",
+      "specialty": "Pediatrics",
+      "avatarUrl": "https://randomuser.me/api/portraits/women/90.jpg"
+    }
+  ],
+  "appointments": [],
+  "schedules": {}
+}
