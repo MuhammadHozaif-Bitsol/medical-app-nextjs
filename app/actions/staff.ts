@@ -13,7 +13,7 @@ async function requireStaffAuth() {
     throw new Error("Unauthorized");
   }
   const session = await verifyToken(authSession.value);
-  if (!session || session.role !== "staff") {
+  if (session?.role !== "staff") {
     throw new Error("Forbidden: Staff access only");
   }
   return session;

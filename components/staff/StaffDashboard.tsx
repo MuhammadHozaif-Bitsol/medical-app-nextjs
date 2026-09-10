@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { Appointment, Doctor, User } from "@/types";
 import { AppointmentCard } from "@/components/ui/AppointmentCard";
 import { Modal } from "@/components/ui/Modal";
@@ -67,12 +67,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
   const defaultSchedule = ["09:00", "10:00", "11:00", "14:00", "15:00"];
 
-  // Sync draft state when selected doctor changes or server state updates
-  useEffect(() => {
-    if (selectedDoctorId) {
-      setDoctorSchedule(schedulesMap[selectedDoctorId] || defaultSchedule);
-    }
-  }, [selectedDoctorId, schedulesMap]);
+  const handleSelectDoctor = (docId: string) => {
+    setSelectedDoctorId(docId);
+    setDoctorSchedule(schedulesMap[docId] || defaultSchedule);
+  };
 
   const toggleSlot = (slot: string) => {
     setDoctorSchedule((prev) =>
@@ -240,7 +238,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                     <button
                       type="button"
                       key={doc.id}
-                      onClick={() => setSelectedDoctorId(doc.id)}
+                      onClick={() => handleSelectDoctor(doc.id)}
                       className={`text-left px-4 py-3 rounded-lg border transition-colors ${selectedDoctorId === doc.id ? "bg-blue-50 border-blue-200 text-blue-800 font-medium" : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"}`}
                     >
                       {doc.name}{" "}

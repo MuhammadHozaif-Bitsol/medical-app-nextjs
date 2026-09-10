@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { readDb } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { StaffDashboard } from "@/components/staff/StaffDashboard";
-import type { Appointment, Doctor } from "@/types";
+import type { Appointment, Doctor, User } from "@/types";
 
 export default async function StaffDashboardPage() {
   const cookieStore = await cookies();
@@ -20,14 +20,14 @@ export default async function StaffDashboardPage() {
 
   const db = await readDb();
 
-  const user = db.users.find((u: any) => u.id === session.id);
+  const user = db.users.find((u: User) => u.id === session.id);
   if (!user) {
     redirect("/login");
   }
 
   // Fetch all appointments across all patients, sorted
   const appointments: Appointment[] = [...db.appointments].sort(
-    (a: any, b: any) =>
+    (a: Appointment, b: Appointment) =>
       new Date(a.dateTimeUtc).getTime() - new Date(b.dateTimeUtc).getTime(),
   );
 

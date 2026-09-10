@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { parse, formatISO } from "date-fns";
 import type { Doctor } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -36,8 +36,8 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<BookingFormData>({
@@ -48,9 +48,9 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
     },
   });
 
-  const selectedDoctorId = watch("doctorId");
-  const selectedDate = watch("date");
-  const selectedTime = watch("time");
+  const selectedDoctorId = useWatch({ control, name: "doctorId" });
+  const selectedDate = useWatch({ control, name: "date" });
+  const selectedTime = useWatch({ control, name: "time" });
 
   // Fetch doctors on mount
   useEffect(() => {
@@ -61,21 +61,25 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
 
   // Fetch available slots when doctor AND date are selected
   useEffect(() => {
-    if (selectedDoctorId && selectedDate) {
-      setIsFetchingSlots(true);
-      getAvailableSlots(selectedDoctorId, selectedDate)
-        .then((slots) => {
+    const fetchSlots = async () => {
+      if (selectedDoctorId && selectedDate) {
+        setIsFetchingSlots(true);
+        try {
+          const slots = await getAvailableSlots(selectedDoctorId, selectedDate);
           setAvailableSlots(slots);
           setValue("time", "");
-        })
-        .catch((err) => {
+        } catch (err) {
           console.error("Failed to fetch slots:", err);
           setAvailableSlots([]);
-        })
-        .finally(() => setIsFetchingSlots(false));
-    } else {
-      setAvailableSlots([]);
-    }
+        } finally {
+          setIsFetchingSlots(false);
+        }
+      } else {
+        setAvailableSlots([]);
+      }
+    };
+    
+    fetchSlots();
   }, [selectedDoctorId, selectedDate, setValue]);
 
   const onSubmit = async (data: BookingFormData) => {
@@ -103,8 +107,8 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         reset();
         onSuccess();
       }
-    } catch (e: any) {
-      setError(e.message || "Failed to book appointment");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to book appointment");
     }
   };
 
