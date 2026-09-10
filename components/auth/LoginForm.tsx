@@ -35,8 +35,8 @@ export const LoginForm: React.FC = () => {
       } else {
         await registerAction(data.name, data.email, data.password);
       }
-    } catch (error: any) {
-      setAuthError(error.message || "Authentication failed. Please try again.");
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Authentication failed. Please try again.");
     }
   };
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { readDb } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { PatientPortal } from "@/components/portal/PatientPortal";
+import type { User, Appointment, Doctor } from "@/types";
 
 export default async function PatientPortalPage() {
   const cookieStore = await cookies();
@@ -18,7 +19,7 @@ export default async function PatientPortalPage() {
   }
   const db = await readDb();
 
-  const user = db.users.find((u: any) => u.id === session.id);
+  const user = db.users.find((u: User) => u.id === session.id);
 
   if (!user) {
     redirect("/login");
@@ -26,14 +27,14 @@ export default async function PatientPortalPage() {
 
   // Fetch data natively on the server to pass down to Client Components
   const appointments = db.appointments
-    .filter((apt: any) => apt.patientId === user.id)
+    .filter((apt: Appointment) => apt.patientId === user.id)
     .sort(
-      (a: any, b: any) =>
+      (a: Appointment, b: Appointment) =>
         new Date(a.dateTimeUtc).getTime() - new Date(b.dateTimeUtc).getTime(),
     );
 
   const doctorsMap: Record<string, string> = {};
-  db.doctors.forEach((d: any) => {
+  db.doctors.forEach((d: Doctor) => {
     doctorsMap[d.id] = d.name;
   });
 

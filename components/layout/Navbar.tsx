@@ -4,17 +4,18 @@ import { readDb } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { logoutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/Button";
+import type { User } from "@/types";
 
 export default async function Navbar() {
   const cookieStore = await cookies();
   const authCookie = cookieStore.get("auth_session");
-  let user = null;
+  let user: User | null = null;
 
   if (authCookie) {
     const session = await verifyToken(authCookie.value);
     if (session) {
       const db = await readDb();
-      user = db.users.find((u: any) => u.id === session.id);
+      user = db.users.find((u: User) => u.id === session.id) || null;
     }
   }
 

@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import type { Doctor } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DoctorCard } from "@/components/ui/DoctorCard";
 import { Bot, AlertCircle } from "lucide-react";
-import { askAIAssistant, getDoctors } from "@/app/actions/patient";
+import { askAIAssistant } from "@/app/actions/patient";
 
 export interface AIAssistantProps {
   doctors: Doctor[];
@@ -38,8 +38,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ doctors }) => {
         }
       }
       setSymptoms("");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
     }

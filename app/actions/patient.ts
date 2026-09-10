@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 import { verifyToken } from "@/lib/session";
+import type { Appointment, Doctor } from "@/types";
 
 async function requireAuth() {
   const cookieStore = await cookies();
@@ -22,7 +23,7 @@ async function requireAuth() {
 export async function getDoctors() {
   await requireAuth();
   const db = await readDb();
-  return db.doctors;
+  return db.doctors as Doctor[];
 }
 
 export async function getAppointments() {
@@ -30,9 +31,9 @@ export async function getAppointments() {
   const db = await readDb();
   // Ensure we only return appointments for the current user if they are a patient
   if (session.role === "patient") {
-    return db.appointments.filter((a: any) => a.patientId === session.id);
+    return db.appointments.filter((a: Appointment) => a.patientId === session.id);
   }
-  return db.appointments;
+  return db.appointments as Appointment[];
 }
 
 export async function getAvailableSlots(doctorId: string, date: string) {
@@ -46,12 +47,12 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   // Find booked slots for this doctor on the selected date
   const bookedSlotsList = db.appointments
     .filter(
-      (apt: any) =>
+      (apt: Appointment) =>
         apt.doctorId === doctorId &&
         apt.status === "confirmed" &&
         apt.dateTimeUtc.includes(date),
     )
-    .map((apt: any) => {
+    .map((apt: Appointment) => {
       // dateTimeUtc looks like "2026-08-31T10:00:00-04:00"
       // Extract the time portion HH:mm
       const timeMatch = apt.dateTimeUtc.match(/T(\d{2}:\d{2})/);
@@ -63,7 +64,7 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   return allSlots.filter((slot: string) => !bookedSlots.has(slot));
 }
 
-export async function bookAppointment(payload: any) {
+export async function bookAppointment(payload: Omit<Appointment, "id" | "status">) {
   const session = await requireAuth();
   if (session.role !== "patient" || payload.patientId !== session.id) {
     throw new Error("Forbidden: Cannot book appointments for other patients");
@@ -74,7 +75,7 @@ export async function bookAppointment(payload: any) {
   // Validate that the slot is not already taken
   // The payload.dateTimeUtc looks like "2026-08-31T10:00:00+05:00"
   const isTaken = db.appointments.some(
-    (apt: any) =>
+    (apt: Appointment) =>
       apt.doctorId === payload.doctorId &&
       apt.status === "confirmed" &&
       apt.dateTimeUtc === payload.dateTimeUtc,
@@ -98,7 +99,7 @@ export async function bookAppointment(payload: any) {
 export async function cancelAppointment(appointmentId: string) {
   const session = await requireAuth();
   const db = await readDb();
-  const index = db.appointments.findIndex((a: any) => a.id === appointmentId);
+  const index = db.appointments.findIndex((a: Appointment) => a.id === appointmentId);
 
   if (index !== -1) {
     const apt = db.appointments[index];
@@ -127,7 +128,7 @@ export async function askAIAssistant(symptoms: string) {
       : "General Practice";
 
   const doctor =
-    db.doctors.find((d: any) => d.specialty === specialty) || db.doctors[0];
+    db.doctors.find((d: Doctor) => d.specialty === specialty) || db.doctors[0];
 
   return {
     suggestion: doctor.id,
