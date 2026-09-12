@@ -1,28 +1,39 @@
 "use server";
 
-import { readDb, writeDb } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { signToken } from "@/lib/session";
-import type { User } from "@/types";
+import bcrypt from "bcryptjs";
 
 export async function loginAction(email: string, password?: string) {
-  const db = await readDb();
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
 
-  // Minimal auth logic for prototype
-  const user = db.users.find((u: User & { password?: string }) => u.email === email);
-  if (!user || user.password !== password) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user?.password) {
+    throw new Error("Invalid credentials");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
     throw new Error("Invalid credentials");
   }
 
   // Set auth cookie
   const cookieStore = await cookies();
   const token = await signToken({ id: user.id, role: user.role });
-  
+
   cookieStore.set("auth_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     path: "/",
+    sameSite: "lax",
   });
 
   if (user.role === "staff") {
@@ -37,30 +48,36 @@ export async function registerAction(
   email: string,
   password?: string,
 ) {
-  const db = await readDb();
+  if (!name || !email || !password) {
+    throw new Error("All fields are required");
+  }
 
-  const normalizedInputEmail = typeof email === "string" ? email.toLowerCase() : "";
-  const existingUser = db.users.some((u: User) => {
-    if (typeof u.email === "string") {
-      return u.email.toLowerCase() === normalizedInputEmail;
-    }
-    return false;
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Check if email already registered
+  const existingUser = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
   });
 
   if (existingUser) {
     throw new Error("Email already registered");
   }
 
-  const newUser = {
-    id: `p${Date.now()}`,
-    name,
-    email,
-    password,
-    role: "patient",
-  };
+  // Hash password with bcrypt before storing in PostgreSQL
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  db.users.push(newUser);
-  await writeDb(db);
+  const newUser = await prisma.user.create({
+    data: {
+      name: name.trim(),
+      email: normalizedEmail,
+      password: hashedPassword,
+      role: "patient",
+    },
+  });
 
   // Set auth cookie
   const cookieStore = await cookies();
@@ -70,6 +87,7 @@ export async function registerAction(
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     path: "/",
+    sameSite: "lax",
   });
 
   redirect("/patient/doctors");

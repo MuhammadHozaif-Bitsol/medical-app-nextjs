@@ -16,7 +16,10 @@ export async function verifyToken(token: string) {
     const { payload } = await jwtVerify(token, encodedKey);
     return payload;
   } catch (error) {
-    console.error("JWT Verification failed:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "JWT Verification failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return null;
   }
 }

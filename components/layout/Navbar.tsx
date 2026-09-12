@@ -1,9 +1,8 @@
 import React from "react";
 import { cookies } from "next/headers";
-import { readDb } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/session";
-import { logoutAction } from "@/app/actions/auth";
-import { Button } from "@/components/ui/Button";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 import type { User } from "@/types";
 
 export default async function Navbar() {
@@ -13,9 +12,18 @@ export default async function Navbar() {
 
   if (authCookie) {
     const session = await verifyToken(authCookie.value);
-    if (session) {
-      const db = await readDb();
-      user = db.users.find((u: User) => u.id === session.id) || null;
+    if (session?.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: session.id as string },
+      });
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role as "patient" | "staff",
+        };
+      }
     }
   }
 
@@ -32,13 +40,10 @@ export default async function Navbar() {
         {user && (
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-600">
-              Hi, <strong className="text-slate-800">{user.name}</strong> ({user.role})
+              Hi, <strong className="text-slate-800">{user.name}</strong> (
+              {user.role})
             </span>
-            <form action={logoutAction}>
-              <Button type="submit" variant="outline" className="text-sm py-1">
-                Sign Out
-              </Button>
-            </form>
+            <SignOutButton />
           </div>
         )}
       </div>

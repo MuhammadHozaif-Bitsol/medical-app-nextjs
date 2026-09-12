@@ -1,9 +1,25 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { readDb } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/session";
 import { PatientPortal } from "@/components/portal/PatientPortal";
 import type { User, Appointment, Doctor } from "@/types";
+
+type RawAppointment = {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  patientName: string;
+  dateTimeUtc: Date;
+  status: string;
+};
+
+type RawDoctor = {
+  id: string;
+  name: string;
+  specialty: string;
+  avatarUrl: string | null;
+};
 
 export default async function PatientPortalPage() {
   const cookieStore = await cookies();
@@ -14,29 +30,58 @@ export default async function PatientPortalPage() {
   }
 
   const session = await verifyToken(authCookie.value);
-  if (!session) {
-    redirect("/login");
-  }
-  const db = await readDb();
-
-  const user = db.users.find((u: User) => u.id === session.id);
-
-  if (!user) {
+  if (!session?.id) {
     redirect("/login");
   }
 
-  // Fetch data natively on the server to pass down to Client Components
-  const appointments = db.appointments
-    .filter((apt: Appointment) => apt.patientId === user.id)
-    .sort(
-      (a: Appointment, b: Appointment) =>
-        new Date(a.dateTimeUtc).getTime() - new Date(b.dateTimeUtc).getTime(),
-    );
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.id as string },
+  });
+
+  if (!dbUser) {
+    redirect("/login");
+  }
+
+  const user: User = {
+    id: dbUser.id,
+    name: dbUser.name,
+    email: dbUser.email,
+    role: dbUser.role as "patient" | "staff",
+  };
+
+  // Fetch appointments and doctors in parallel from PostgreSQL
+  const [rawAppointments, rawDoctors] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { patientId: user.id },
+      orderBy: { dateTimeUtc: "asc" },
+    }),
+    prisma.doctor.findMany({
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const appointments: Appointment[] = rawAppointments.map(
+    (apt: RawAppointment) => ({
+      id: apt.id,
+      doctorId: apt.doctorId,
+      patientId: apt.patientId,
+      patientName: apt.patientName,
+      dateTimeUtc: apt.dateTimeUtc.toISOString(),
+      status: apt.status as "confirmed" | "cancelled",
+    }),
+  );
+
+  const doctors: Doctor[] = rawDoctors.map((d: RawDoctor) => ({
+    id: d.id,
+    name: d.name,
+    specialty: d.specialty,
+    avatarUrl: d.avatarUrl ?? undefined,
+  }));
 
   const doctorsMap: Record<string, string> = {};
-  db.doctors.forEach((d: Doctor) => {
+  for (const d of doctors) {
     doctorsMap[d.id] = d.name;
-  });
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -44,7 +89,7 @@ export default async function PatientPortalPage() {
         user={user}
         appointments={appointments}
         doctorsMap={doctorsMap}
-        doctors={db.doctors}
+        doctors={doctors}
       />
     </main>
   );

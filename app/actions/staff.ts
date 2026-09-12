@@ -1,9 +1,8 @@
 "use server";
 
-import { readDb, writeDb } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-
 import { verifyToken } from "@/lib/session";
 
 async function requireStaffAuth() {
@@ -22,15 +21,16 @@ async function requireStaffAuth() {
 export async function updateDoctorSchedule(doctorId: string, slots: string[]) {
   await requireStaffAuth();
 
-  const db = await readDb();
+  await prisma.schedule.upsert({
+    where: { doctorId },
+    update: { slots },
+    create: {
+      doctorId,
+      slots,
+    },
+  });
 
-  if (!db.schedules) {
-    db.schedules = {};
-  }
-
-  db.schedules[doctorId] = slots;
-
-  await writeDb(db);
   revalidatePath("/staff/dashboard");
+  revalidatePath("/patient/doctors");
   return true;
 }

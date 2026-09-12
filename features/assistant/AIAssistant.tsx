@@ -20,7 +20,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ doctors }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submitAction = async (e: React.FormEvent) => {
+  const submitAction = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!symptoms.trim()) return;
 

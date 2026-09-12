@@ -78,7 +78,7 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         setAvailableSlots([]);
       }
     };
-    
+
     fetchSlots();
   }, [selectedDoctorId, selectedDate, setValue]);
 
