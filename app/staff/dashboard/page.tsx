@@ -36,7 +36,7 @@ export default async function StaffDashboardPage() {
   }
 
   const session = await verifyToken(authCookie.value);
-  if (!session || session.role !== "staff") {
+  if (session?.role !== "staff") {
     redirect("/login");
   }
 

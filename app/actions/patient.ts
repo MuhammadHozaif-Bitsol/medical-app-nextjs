@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/session";
+import { getSpecialtyRecommendation } from "@/lib/gemini";
 import type { Appointment, Doctor } from "@/types";
 
 type DbDoctor = {
@@ -191,23 +192,53 @@ export async function cancelAppointment(
 export async function askAIAssistant(symptoms: string) {
   await requireAuth();
 
-  const specialty =
-    symptoms.toLowerCase().includes("heart") ||
-    symptoms.toLowerCase().includes("chest")
-      ? "Cardiology"
-      : "General Practice";
-
-  const doctor =
-    (await prisma.doctor.findFirst({
-      where: { specialty },
-    })) || (await prisma.doctor.findFirst());
-
-  if (!doctor) {
-    throw new Error("No doctors available");
+  if (!symptoms?.trim()) {
+    throw new Error(
+      "Please describe your symptoms to receive a recommendation.",
+    );
   }
 
-  return {
-    suggestion: doctor.id,
-    reason: `Based on your symptoms, a ${specialty} specialist is recommended.`,
-  };
+  try {
+    // 1. Fetch all active clinic doctors from PostgreSQL
+    const doctors = await prisma.doctor.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    if (doctors.length === 0) {
+      throw new Error("No doctors are currently available at the clinic.");
+    }
+
+    // 2. Extract strictly the unique medical specialties available at the clinic
+    const availableSpecialties: string[] = Array.from(
+      new Set(doctors.map((d: DbDoctor) => d.specialty)),
+    );
+
+    // 3. Query Gemini AI with ONLY the symptom string and allowed specialties list
+    const recommendation = await getSpecialtyRecommendation(
+      symptoms.trim(),
+      availableSpecialties,
+    );
+
+    // 4. Map the validated specialty back to a specific doctor from our database
+    const matchedDoctor =
+      doctors.find(
+        (d: DbDoctor) =>
+          d.specialty.toLowerCase() === recommendation.specialty.toLowerCase(),
+      ) || doctors[0];
+
+    return {
+      suggestion: matchedDoctor.id,
+      reason: recommendation.reason,
+    };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("AI assistant") ||
+        error.message.includes("No doctors"))
+    ) {
+      throw error;
+    }
+    console.error("askAIAssistant backend error:", error);
+    throw new Error("AI assistant is not available right now.");
+  }
 }
