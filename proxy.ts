@@ -14,7 +14,10 @@ function getHomeRouteByRole(role: unknown): string {
   return role === "staff" ? "/staff/dashboard" : "/patient/doctors";
 }
 
-function determineRedirect(pathname: string, sessionRole: unknown): string | null {
+function determineRedirect(
+  pathname: string,
+  sessionRole: unknown,
+): string | null {
   if (!sessionRole) {
     return isProtectedRoute(pathname) ? "/login" : null;
   }
@@ -37,7 +40,10 @@ function determineRedirect(pathname: string, sessionRole: unknown): string | nul
 export async function proxy(request: NextRequest) {
   const sessionCookie = request.cookies.get("auth_session");
   const session = sessionCookie ? await verifyToken(sessionCookie.value) : null;
-  const redirectTarget = determineRedirect(request.nextUrl.pathname, session?.role);
+  const redirectTarget = determineRedirect(
+    request.nextUrl.pathname,
+    session?.role,
+  );
 
   if (redirectTarget) {
     const url = request.nextUrl.clone();

@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -21,11 +21,15 @@ async function main() {
       name: "Admin Staff",
       email: "staff@clinic.com",
       password: hashedPassword,
-      role: Role.staff,
+      role: "staff",
     },
   });
-  console.log(`👤 Seeded staff user: ${staffUser.email} (password: password123, securely hashed).`);
-  console.log("ℹ️  No sample patients seeded — patients will be registered via the app.");
+  console.log(
+    `👤 Seeded staff user: ${staffUser.email} (password: password123, securely hashed).`,
+  );
+  console.log(
+    "ℹ️  No sample patients seeded — patients will be registered via the app.",
+  );
 
   // 3. Seed Doctors
   const doctorsData = [

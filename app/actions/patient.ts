@@ -6,6 +6,22 @@ import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/session";
 import type { Appointment, Doctor } from "@/types";
 
+type DbDoctor = {
+  id: string;
+  name: string;
+  specialty: string;
+  avatarUrl: string | null;
+};
+
+type DbAppointment = {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  patientName: string;
+  dateTimeUtc: Date;
+  status: string;
+};
+
 async function requireAuth() {
   const cookieStore = await cookies();
   const authSession = cookieStore.get("auth_session");
@@ -24,7 +40,7 @@ export async function getDoctors(): Promise<Doctor[]> {
   const doctors = await prisma.doctor.findMany({
     orderBy: { name: "asc" },
   });
-  return doctors.map((d) => ({
+  return doctors.map((d: DbDoctor) => ({
     id: d.id,
     name: d.name,
     specialty: d.specialty,
@@ -35,13 +51,14 @@ export async function getDoctors(): Promise<Doctor[]> {
 export async function getAppointments(): Promise<Appointment[]> {
   const session = await requireAuth();
 
-  const where = session.role === "patient" ? { patientId: session.id as string } : {};
+  const where =
+    session.role === "patient" ? { patientId: session.id as string } : {};
   const appointments = await prisma.appointment.findMany({
     where,
     orderBy: { dateTimeUtc: "asc" },
   });
 
-  return appointments.map((a) => ({
+  return appointments.map((a: DbAppointment) => ({
     id: a.id,
     doctorId: a.doctorId,
     patientId: a.patientId,
@@ -51,14 +68,23 @@ export async function getAppointments(): Promise<Appointment[]> {
   }));
 }
 
-export async function getAvailableSlots(doctorId: string, date: string): Promise<string[]> {
+export async function getAvailableSlots(
+  doctorId: string,
+  date: string,
+): Promise<string[]> {
   await requireAuth();
 
   // Get dynamic schedule assigned to the doctor, or fallback to default
   const schedule = await prisma.schedule.findUnique({
     where: { doctorId },
   });
-  const allSlots = schedule?.slots || ["09:00", "10:00", "11:00", "14:00", "15:00"];
+  const allSlots = schedule?.slots || [
+    "09:00",
+    "10:00",
+    "11:00",
+    "14:00",
+    "15:00",
+  ];
 
   // Find confirmed appointments for this doctor on the selected date
   const startOfDay = new Date(`${date}T00:00:00.000Z`);
@@ -76,17 +102,19 @@ export async function getAvailableSlots(doctorId: string, date: string): Promise
   });
 
   const bookedSlotsList = bookedAppointments
-    .map((apt) => {
-      const timeMatch = apt.dateTimeUtc.toISOString().match(/T(\d{2}:\d{2})/);
+    .map((apt: { dateTimeUtc: Date }) => {
+      const timeMatch = /T(\d{2}:\d{2})/.exec(apt.dateTimeUtc.toISOString());
       return timeMatch ? timeMatch[1] : null;
     })
-    .filter(Boolean);
+    .filter((time: string | null): time is string => time !== null);
 
-  const bookedSlots = new Set(bookedSlotsList);
-  return allSlots.filter((slot) => !bookedSlots.has(slot));
+  const bookedSlots = new Set<string>(bookedSlotsList);
+  return allSlots.filter((slot: string) => !bookedSlots.has(slot));
 }
 
-export async function bookAppointment(payload: Omit<Appointment, "id" | "status">): Promise<Appointment> {
+export async function bookAppointment(
+  payload: Omit<Appointment, "id" | "status">,
+): Promise<Appointment> {
   const session = await requireAuth();
   if (session.role !== "patient" || payload.patientId !== session.id) {
     throw new Error("Forbidden: Cannot book appointments for other patients");
@@ -131,7 +159,9 @@ export async function bookAppointment(payload: Omit<Appointment, "id" | "status"
   };
 }
 
-export async function cancelAppointment(appointmentId: string): Promise<boolean> {
+export async function cancelAppointment(
+  appointmentId: string,
+): Promise<boolean> {
   const session = await requireAuth();
 
   const apt = await prisma.appointment.findUnique({

@@ -41,7 +41,8 @@ export default async function Navbar() {
         {user && (
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-600">
-              Hi, <strong className="text-slate-800">{user.name}</strong> ({user.role})
+              Hi, <strong className="text-slate-800">{user.name}</strong> (
+              {user.role})
             </span>
             <form action={logoutAction}>
               <Button type="submit" variant="outline" className="text-sm py-1">

@@ -39,7 +39,11 @@ export const LoginForm: React.FC = () => {
         await registerAction(data.name, data.email, data.password);
       }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "Authentication failed. Please try again.");
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "Authentication failed. Please try again.",
+      );
     }
   };
 
@@ -78,7 +82,7 @@ export const LoginForm: React.FC = () => {
           {...register("email", {
             required: "Email is required",
             pattern: {
-              value: /\S+@\S+\.\S+/,
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
               message: "Please enter a valid email address",
             },
           })}

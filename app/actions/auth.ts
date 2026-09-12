@@ -16,7 +16,7 @@ export async function loginAction(email: string, password?: string) {
     where: { email: normalizedEmail },
   });
 
-  if (!user || !user.password) {
+  if (!user?.password) {
     throw new Error("Invalid credentials");
   }
 
