@@ -2,8 +2,7 @@ import React from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/session";
-import { logoutAction } from "@/app/actions/auth";
-import { Button } from "@/components/ui/Button";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 import type { User } from "@/types";
 
 export default async function Navbar() {
@@ -44,11 +43,7 @@ export default async function Navbar() {
               Hi, <strong className="text-slate-800">{user.name}</strong> (
               {user.role})
             </span>
-            <form action={logoutAction}>
-              <Button type="submit" variant="outline" className="text-sm py-1">
-                Sign Out
-              </Button>
-            </form>
+            <SignOutButton />
           </div>
         )}
       </div>

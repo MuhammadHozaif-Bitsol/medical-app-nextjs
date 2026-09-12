@@ -21,24 +21,58 @@ export const LoginForm: React.FC = () => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<AuthFormData>();
+  } = useForm<AuthFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+  });
 
   const toggleMode = () => {
     setIsLoginMode((prev) => !prev);
     setAuthError(null);
     setShowPassword(false);
-    reset();
+    reset({
+      name: "",
+      email: "",
+      password: "",
+    });
   };
 
-  const onSubmit = async (data: AuthFormData) => {
+  const onSubmit = async (data: AuthFormData, e?: React.BaseSyntheticEvent) => {
     setAuthError(null);
+
+    // Fallback to native FormData in case browser auto-fill/password manager didn't sync RHF state
+    let name = data.name;
+    let email = data.email;
+    let password = data.password;
+
+    if (e?.target) {
+      const form = e.target as HTMLFormElement;
+      const formData = new FormData(form);
+      name = name || (formData.get("name") as string) || "";
+      email = email || (formData.get("email") as string) || "";
+      password = password || (formData.get("password") as string) || "";
+    }
+
     try {
       if (isLoginMode) {
-        await loginAction(data.email, data.password);
+        await loginAction(email, password);
       } else {
-        await registerAction(data.name, data.email, data.password);
+        await registerAction(name, email, password);
       }
     } catch (error) {
+      // Next.js redirect() throws a NEXT_REDIRECT error internally to perform navigation.
+      // Ignore it so it does not flash a red error banner before the page changes.
+      if (
+        error instanceof Error &&
+        (error.message === "NEXT_REDIRECT" ||
+          (error as { digest?: string }).digest?.startsWith("NEXT_REDIRECT"))
+      ) {
+        return;
+      }
+
       setAuthError(
         error instanceof Error
           ? error.message
@@ -82,7 +116,7 @@ export const LoginForm: React.FC = () => {
           {...register("email", {
             required: "Email is required",
             pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              value: /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/,
               message: "Please enter a valid email address",
             },
           })}
