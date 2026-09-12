@@ -1,4 +1,5 @@
-import { PrismaClient, Role, AppointmentStatus } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -12,35 +13,19 @@ async function main() {
   await prisma.user.deleteMany();
   console.log("🧹 Cleaned up existing database records.");
 
-  // 2. Seed Users
-  const usersData = [
-    {
+  // 2. Seed Staff User only (Password hashed with bcrypt)
+  const hashedPassword = await bcrypt.hash("password123", 10);
+  const staffUser = await prisma.user.create({
+    data: {
       id: "s1",
       name: "Admin Staff",
       email: "staff@clinic.com",
-      password: "password123",
+      password: hashedPassword,
       role: Role.staff,
     },
-    {
-      id: "p1788091280893",
-      name: "hozaif",
-      email: "hozaif@patient.com",
-      password: "password123",
-      role: Role.patient,
-    },
-    {
-      id: "p1788105146909",
-      name: "admin",
-      email: "admin@gmail.com",
-      password: "BaLFqR2tolC3vrEo10Uq4PnLdA6K92frCUpGPfYw",
-      role: Role.patient,
-    },
-  ];
-
-  for (const user of usersData) {
-    await prisma.user.create({ data: user });
-  }
-  console.log(`👤 Seeded ${usersData.length} users.`);
+  });
+  console.log(`👤 Seeded staff user: ${staffUser.email} (password: password123, securely hashed).`);
+  console.log("ℹ️  No sample patients seeded — patients will be registered via the app.");
 
   // 3. Seed Doctors
   const doctorsData = [
@@ -97,63 +82,6 @@ async function main() {
     });
   }
   console.log(`📅 Seeded doctor schedules.`);
-
-  // 5. Seed Appointments
-  const appointmentsData = [
-    {
-      id: "apt1788091319391",
-      doctorId: "d2",
-      patientId: "p1788091280893",
-      patientName: "hozaif",
-      dateTimeUtc: new Date("2026-08-31T10:00:00+05:00"),
-      status: AppointmentStatus.confirmed,
-    },
-    {
-      id: "apt1788091505842",
-      doctorId: "d2",
-      patientId: "p1788091280893",
-      patientName: "hozaif",
-      dateTimeUtc: new Date("2026-08-30T09:00:00+05:00"),
-      status: AppointmentStatus.cancelled,
-    },
-    {
-      id: "apt1788091529576",
-      doctorId: "d2",
-      patientId: "p1788091280893",
-      patientName: "hozaif",
-      dateTimeUtc: new Date("2026-08-30T14:00:00+05:00"),
-      status: AppointmentStatus.cancelled,
-    },
-    {
-      id: "apt1788100224631",
-      doctorId: "d1",
-      patientId: "p1788091280893",
-      patientName: "hozaif",
-      dateTimeUtc: new Date("2026-09-01T09:00:00+05:00"),
-      status: AppointmentStatus.confirmed,
-    },
-    {
-      id: "apt1788105197563",
-      doctorId: "d1",
-      patientId: "p1788105146909",
-      patientName: "admin",
-      dateTimeUtc: new Date("2026-08-30T09:00:00+05:00"),
-      status: AppointmentStatus.confirmed,
-    },
-    {
-      id: "apt1788105762378",
-      doctorId: "d3",
-      patientId: "p1788105146909",
-      patientName: "admin",
-      dateTimeUtc: new Date("2026-08-31T14:30:00+05:00"),
-      status: AppointmentStatus.confirmed,
-    },
-  ];
-
-  for (const apt of appointmentsData) {
-    await prisma.appointment.create({ data: apt });
-  }
-  console.log(`📋 Seeded ${appointmentsData.length} appointments.`);
 
   console.log("✨ Database idempotent reset & seed finished successfully!");
 }
