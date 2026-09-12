@@ -52,6 +52,10 @@ export async function registerAction(
     throw new Error("All fields are required");
   }
 
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
 
   // Check if email already registered

@@ -1,6 +1,6 @@
 import React from "react";
 import { cookies } from "next/headers";
-import { readDb } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/session";
 import { logoutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -13,9 +13,18 @@ export default async function Navbar() {
 
   if (authCookie) {
     const session = await verifyToken(authCookie.value);
-    if (session) {
-      const db = await readDb();
-      user = db.users.find((u: User) => u.id === session.id) || null;
+    if (session?.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: session.id as string },
+      });
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role as "patient" | "staff",
+        };
+      }
     }
   }
 

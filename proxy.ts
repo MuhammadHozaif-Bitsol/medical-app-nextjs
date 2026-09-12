@@ -2,49 +2,47 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "./lib/session";
 
-export async function proxy(request: NextRequest) {
-  const url = request.nextUrl.clone();
-  const sessionCookie = request.cookies.get("auth_session");
-  let session = null;
+function isProtectedRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/patient") ||
+    pathname.startsWith("/staff") ||
+    pathname === "/"
+  );
+}
 
-  if (sessionCookie) {
-    session = await verifyToken(sessionCookie.value);
+function getHomeRouteByRole(role: unknown): string {
+  return role === "staff" ? "/staff/dashboard" : "/patient/doctors";
+}
+
+function determineRedirect(pathname: string, sessionRole: unknown): string | null {
+  if (!sessionRole) {
+    return isProtectedRoute(pathname) ? "/login" : null;
   }
 
-  // Redirect to login if unauthenticated on protected routes
-  if (!session) {
-    if (
-      url.pathname.startsWith("/patient") ||
-      url.pathname.startsWith("/staff") ||
-      url.pathname === "/"
-    ) {
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    }
-  } else {
-    // If authenticated, perform role checks
-    // Prevent patients from accessing staff routes
-    if (session.role === "patient" && url.pathname.startsWith("/staff")) {
-      url.pathname = "/patient/doctors";
-      return NextResponse.redirect(url);
-    }
+  if (sessionRole === "patient" && pathname.startsWith("/staff")) {
+    return "/patient/doctors";
+  }
 
-    // Prevent staff from accessing patient routes
-    if (session.role === "staff" && url.pathname.startsWith("/patient")) {
-      url.pathname = "/staff/dashboard";
-      return NextResponse.redirect(url);
-    }
+  if (sessionRole === "staff" && pathname.startsWith("/patient")) {
+    return "/staff/dashboard";
+  }
 
-    // Redirect from root or login to appropriate dashboard
-    if (
-      url.pathname === "/" ||
-      url.pathname === "/login" ||
-      url.pathname === "/register"
-    ) {
-      url.pathname =
-        session.role === "staff" ? "/staff/dashboard" : "/patient/doctors";
-      return NextResponse.redirect(url);
-    }
+  if (pathname === "/" || pathname === "/login" || pathname === "/register") {
+    return getHomeRouteByRole(sessionRole);
+  }
+
+  return null;
+}
+
+export async function proxy(request: NextRequest) {
+  const sessionCookie = request.cookies.get("auth_session");
+  const session = sessionCookie ? await verifyToken(sessionCookie.value) : null;
+  const redirectTarget = determineRedirect(request.nextUrl.pathname, session?.role);
+
+  if (redirectTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = redirectTarget;
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
