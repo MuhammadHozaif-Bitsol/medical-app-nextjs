@@ -59,16 +59,22 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ doctors }) => {
         </div>
       </div>
 
-      <form onSubmit={submitAction} className="flex gap-2 mb-4">
-        <Input
-          label=""
-          placeholder="e.g., I have been experiencing severe chest pain..."
-          value={symptoms}
-          onChange={(e) => setSymptoms(e.target.value)}
-          disabled={isLoading}
-          className="grow"
-        />
-        <Button type="submit" isLoading={isLoading} disabled={!symptoms.trim()}>
+      <form onSubmit={submitAction} className="flex items-center gap-2 mb-4">
+        <div className="flex-1 min-w-0">
+          <Input
+            placeholder="e.g., I have been experiencing severe chest pain..."
+            value={symptoms}
+            onChange={(e) => setSymptoms(e.target.value)}
+            disabled={isLoading}
+            className="h-10 text-sm"
+          />
+        </div>
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          disabled={!symptoms.trim()}
+          className="shrink-0 whitespace-nowrap h-10 px-4 text-sm"
+        >
           Ask AI
         </Button>
       </form>
